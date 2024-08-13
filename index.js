@@ -85,6 +85,17 @@ async function run() {
     // api's
     app.post("/bid", async (req, res) => {
       const data = req.body;
+
+      const query = {
+        email : data.email,
+        jobId: data.jobId
+      }
+      const appliedAlready = await bidCollection.findOne(query);
+      if(appliedAlready) {
+        return res
+        .status(400)
+        .send("You have already bidded this job")
+      } 
       const result = await bidCollection.insertOne(data);
       // console.log(result)
       res.send(result);
@@ -112,7 +123,7 @@ async function run() {
 
       const tokenEmail = req.user.email ;
 
-      console.log(tokenData,"from tokentdata")
+      console.log(tokenEmail,"from tokentdata")
       const email = req.params.email;
       if(tokenEmail !== email){
         return res.status(403).send({message: 'forbidden access'})
@@ -128,6 +139,7 @@ async function run() {
     app.get("/mybids/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
+      console.log(email,query,"131")
       const result = await bidCollection.find(query).toArray();
       res.send(result);
     });
