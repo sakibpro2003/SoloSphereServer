@@ -202,13 +202,18 @@ async function run() {
       const page = parseInt(req.query.page);
       const size = parseInt(req.query.size)-1;
       const filter = req.query.filter;
+      const sort = req.query.sort;
+      // console.log(sort)
       let query = {};
       if(filter){
         query={category: filter}
       }
-      console.log(page, size);
+      let option = {};
+
+      if(sort) option = {sort: {deadline: sort === "asc" ? 1 : -1}}
+      // console.log(page, size);
       const result = await jobCollection
-        .find(query)
+        .find(query, option)
         .skip(page * size)
         .limit(size)
         .toArray();
@@ -216,8 +221,15 @@ async function run() {
     });
     // jobs count form db
     app.get("/jobs-count", async (req, res) => {
-      const count = await jobCollection.countDocuments();
+      const filter = req.query.filter;
+      let query = {};
+      if(filter){
+        query={category: filter}
+      }
+      const count = await jobCollection.countDocuments(query);
+      console.log(count,"count")
       res.send({ count });
+
     });
 
     // Connect the client to the server	(optional starting in v4.7)
