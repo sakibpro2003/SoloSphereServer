@@ -87,15 +87,13 @@ async function run() {
       const data = req.body;
 
       const query = {
-        email : data.email,
-        jobId: data.jobId
-      }
+        email: data.email,
+        jobId: data.jobId,
+      };
       const appliedAlready = await bidCollection.findOne(query);
-      if(appliedAlready) {
-        return res
-        .status(400)
-        .send("You have already bidded this job")
-      } 
+      if (appliedAlready) {
+        return res.status(400).send("You have already bidded this job");
+      }
       const result = await bidCollection.insertOne(data);
       // console.log(result)
       res.send(result);
@@ -120,13 +118,12 @@ async function run() {
     });
 
     app.get("/mypostedjobs/:email", verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email;
 
-      const tokenEmail = req.user.email ;
-
-      console.log(tokenEmail,"from tokentdata")
+      console.log(tokenEmail, "from tokentdata");
       const email = req.params.email;
-      if(tokenEmail !== email){
-        return res.status(403).send({message: 'forbidden access'})
+      if (tokenEmail !== email) {
+        return res.status(403).send({ message: "forbidden access" });
       }
       // console.log(email)
 
@@ -139,7 +136,7 @@ async function run() {
     app.get("/mybids/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email };
-      console.log(email,query,"131")
+      console.log(email, query, "131");
       const result = await bidCollection.find(query).toArray();
       res.send(result);
     });
@@ -198,6 +195,24 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.findOne(query);
       res.send(result);
+    });
+
+    //get all jobs from db for pagination
+    app.get("/all-jobs", async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size)-1;
+      console.log(page, size);
+      const result = await jobCollection
+        .find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    });
+    // jobs count form db
+    app.get("/jobs-count", async (req, res) => {
+      const count = await jobCollection.countDocuments();
+      res.send({ count });
     });
 
     // Connect the client to the server	(optional starting in v4.7)
